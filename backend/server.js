@@ -1,30 +1,47 @@
 const express = require("express");
 const cors = require("cors");
-const mySql = require("mysql2");
- 
+const mysql = require ("mysql2");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
- 
 
-const db = mySql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "natacao"
+const db = mysql.createConnection({
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password : process.env.DB_PASSWORD || "",
+    database : process.env.DB.NAME || "natacao",
+    port: process.env.DB_PORT || 3306,
+    ssl: process.env.DB_HOST ? {
+        rejectUnauthorized: false} : null
 });
 
 db.connect((erro) => {
-    if (erro) {
+    if(erro){
         console.log("Erro ao conectar");
         console.log(erro);
         return;
     }
-    console.log("Conectado com sucesso!");
+    console.log("Conectado com sucesso");
+    const criartabelaSQL = `
+    CREATE TABLE IF NOT EXISTS alunos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    telefone INT NOT NULL,
+    nivel VARCHAR(50) NOT NULL,
+    horario VARCHAR(50) NOT NULL,
+    ativo BOOLEAN DEFAULT TRUE
+    );
+    `;
+    db.query(criartabelaSQL, (erroTabela) => {
+        if (erroTabela) {
+            console.log("Erro de verificação ou criação da tabela", erroTabela);
+        } else {
+            console.log("Tabela pronta para uso");
+        }
+    })
 });
 
-
- 
 app.get("/", (req, res) => {
     res.json({
         mensagem: "API funcionando"
@@ -56,9 +73,8 @@ app.post("/alunos", (req,res) => {
         if (resultados.length > 0) {
             return res.status(400).json({
                 erro: "Já existe um aluno com este nome"
-            })
+            });
         }
-        
         const insertSQL = "INSERT INTO alunos (id, nome, idade, nivel, horario, ativo) VALUES (?, ?, ?, ?, ?, ?)";
         db.query(insertSQL, [novoAluno.id, novoAluno.nome, novoAluno.idade, novoAluno.nivel, novoAluno.horario, novoAluno.ativo], (erro, resultados) => {
             if(erro){
@@ -170,9 +186,10 @@ app.post("/alunos", (req,res) => {
             erro: `Senha incorreta. Faltam ${3-incorretas} ate o sistema bloquear`
         });
     });
- 
-    app.listen(3000, () => {
+
+ const PORT = process.env.PORT||3000;
+    app.listen(PORT, () => {
         console.log("Servidor rodando em: ")
-        console.log("http://localhost:3000")
-        })
-    });
+        console.log(`porta ${PORT}`)
+        })       
+    })         
