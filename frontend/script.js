@@ -1,5 +1,5 @@
-const API = window.location.hostname === "localhost"|| window.localtion === "127.0.0.1"
-? "http:localhost:3000"
+const API = window.location.hostname === "localhost" ||  window.location.hostname === "127.0.0.1"
+? "http://localhost:3000"
 : "https://site-natacao-d85n.onrender.com";
  
 async function cadastrarAluno(event) {
@@ -156,3 +156,4 @@ function logoutAdmin() {
  
 carregarAlunos();
 verificar();
+ 
